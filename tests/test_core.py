@@ -170,6 +170,15 @@ class TestGemini(Base):
             make_agent("Gemini", self.mock, self.tmp).run("x")
         self.assertIn("API key not valid", str(cm.exception))
 
+    def test_no_retry_when_free_tier_limit_is_zero(self):
+        msg = "Quota exceeded ... limit: 0, model: gemini-3.1-pro ... Please retry in 22h6m17.29s."
+        self.mock.script = [lambda b, h, p: (429, {"error": {"message": msg}})]
+        with self.assertRaises(RuntimeError) as cm:
+            make_agent("Gemini", self.mock, self.tmp).run("x")
+        self.assertIn("limit: 0", str(cm.exception))
+        self.assertEqual(len(self.mock.requests), 1)             # failed fast, no pointless retries
+        self.assertEqual(len(self.mock.script), 0)
+
     def test_ping_and_models(self):
         self.mock.script = [lambda b, h, p: (200, {"candidates": [{"content": {"parts": [{"text": "OK"}]}}]})]
         cfg = make_agent("Gemini", self.mock, self.tmp).cfg

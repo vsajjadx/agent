@@ -130,6 +130,9 @@ def friendly_error(msg):
         hint = "دسترسی رد شد (کلید اجازهٔ این مدل/منطقه رو نداره یا فعال نشده)."
     elif "api 404" in low:
         hint = "مدل پیدا نشد؛ اسم مدل رو چک کن یا دکمهٔ 🔄 رو بزن تا لیست مدل‌های واقعی بیاد."
+    elif "limit: 0" in low:
+        hint = ("این مدل توی پلن رایگان اصلاً سهمیه نداره (نه اینکه پر شده باشه). یه مدل Flash مثل gemini-3.8-flash "
+                "یا gemini-2.5-flash انتخاب کن، یا توی Google AI Studio پرداخت (Billing) رو فعال کن.")
     elif "api 429" in low or "quota" in low or "resource_exhausted" in low:
         hint = "سقف نرخ/سهمیه پر شده؛ کمی صبر کن یا مدل دیگه‌ای انتخاب کن."
     elif "connection" in low or "timed out" in low or "max retries" in low:

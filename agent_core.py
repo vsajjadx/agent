@@ -536,6 +536,8 @@ class Agent:
             if self.should_stop():
                 raise Stopped()
             r = requests.post(url, headers=headers, json=payload, timeout=timeout)
+            if r.status_code == 429 and self._quota_hopeless(r):
+                break                                    # retrying can't help (no free-tier quota / long wait)
             if r.status_code in (429, 500, 502, 503, 504) and attempt < 3:
                 try:
                     wait = min(float(r.headers.get("Retry-After", "")), 30)
@@ -550,6 +552,17 @@ class Agent:
                 continue
             break
         return r
+
+    @staticmethod
+    def _quota_hopeless(r):
+        t = r.text
+        if "limit: 0" in t:
+            return True
+        m = re.search(r"retry in (?:(\d+)h)?(?:(\d+)m)?([\d.]+)s", t)
+        if m:
+            secs = int(m.group(1) or 0) * 3600 + int(m.group(2) or 0) * 60 + float(m.group(3))
+            return secs > 60
+        return False
 
     # ---------- providers ----------
     def call_model(self, use_tools=True):
