@@ -9,6 +9,28 @@ permissions:
   contents: write
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libegl1 libgl1 libxkbcommon0 libdbus-1-3 libfontconfig1 libglib2.0-0
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m unittest discover -s tests -v
+
   build:
     runs-on: windows-latest
     steps:
@@ -28,6 +50,7 @@ jobs:
         run: >
           pyinstaller --noconfirm --onefile --windowed --name AIAgent
           --hidden-import pyautogui --hidden-import pyperclip --hidden-import PIL
+          --hidden-import agent_core
           ai_agent.py
 
       - uses: actions/upload-artifact@v4
